@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polymorphic Lookup Tool</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <div>
+          <h1>Polymorphic Lookup Tool</h1>
+          <p class="subtitle">Create or update multi-table lookup columns.</p>
+        </div>
+        <div class="header-actions">
+          <div class="header-info">
+            <div id="connection-badge" class="badge">Not connected</div>
+            <button type="button" id="theme-toggle" class="btn theme-toggle" aria-label="Toggle theme">
+              <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4"></circle>
+                <line x1="12" y1="2" x2="12" y2="5"></line>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="5" y2="12"></line>
+                <line x1="19" y1="12" x2="22" y2="12"></line>
+                <line x1="4.2" y1="4.2" x2="6.4" y2="6.4"></line>
+                <line x1="17.6" y1="17.6" x2="19.8" y2="19.8"></line>
+                <line x1="4.2" y1="19.8" x2="6.4" y2="17.6"></line>
+                <line x1="17.6" y1="6.4" x2="19.8" y2="4.2"></line>
+              </svg>
+              <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 14.2A8 8 0 0 1 9.8 3a9 9 0 1 0 11.2 11.2z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-header-text">
+            <h2>Polymorphic lookup builder</h2>
+            <p class="subtitle">Choose a solution, table, and lookup definition.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-grid">
+            <div class="field">
+              <label for="solution-select">Solution</label>
+              <select id="solution-select"></select>
+              <span class="hint">Only unmanaged solutions are listed.</span>
+            </div>
+            <div class="field">
+              <label for="table-select">Table</label>
+              <select id="table-select" disabled></select>
+              <span class="hint">Tables included in the selected solution.</span>
+            </div>
+            <div class="field">
+              <label for="attribute-select">Attribute</label>
+              <select id="attribute-select" disabled></select>
+              <span class="hint">Pick an existing polymorphic lookup or create a new one.</span>
+            </div>
+            <div class="field new-only">
+              <label for="display-name">Lookup display name</label>
+              <input id="display-name" type="text" placeholder="Customer" disabled />
+            </div>
+            <div class="field new-only">
+              <label for="schema-suffix">Lookup schema name</label>
+              <div class="schema-input">
+                <span id="schema-prefix" class="schema-prefix">new_</span>
+                <input id="schema-suffix" type="text" placeholder="CustomerId" disabled />
+              </div>
+              <span id="schema-full" class="hint">Full schema: new_CustomerId</span>
+            </div>
+            <div class="field new-only">
+              <label for="description-input">Description</label>
+              <input id="description-input" type="text" placeholder="Describes the lookup field" disabled />
+            </div>
+            <div class="field new-only">
+              <label for="required-level-select">Required Level</label>
+              <select id="required-level-select" disabled>
+                <option value="None">None</option>
+                <option value="ApplicationRequired">Application Required</option>
+                <option value="SystemRequired">System Required</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field full-width">
+            <label>Referenced tables</label>
+            <div class="multi-select" id="reference-select">
+              <button type="button" class="multi-select-button" id="reference-button" disabled>
+                Select referenced tables
+              </button>
+              <div class="multi-select-menu hidden" id="reference-menu">
+                <input
+                  id="reference-search"
+                  class="search-input"
+                  type="text"
+                  placeholder="Search by display or logical name"
+                />
+                <div class="multi-select-list" id="reference-list"></div>
+              </div>
+            </div>
+            <span id="reference-hint" class="hint">Select one or more target tables.</span>
+            <div id="change-summary" class="change-summary"></div>
+          </div>
+        </div>
+        <div class="panel-footer">
+          <div id="status-message" class="status-message">Ready.</div>
+          <button type="button" id="submit-button" class="btn primary" disabled>
+            Create lookup
+          </button>
+        </div>
+      </section>
+
+      <section class="logs">
+        <h2>Activity</h2>
+        <pre id="log"></pre>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

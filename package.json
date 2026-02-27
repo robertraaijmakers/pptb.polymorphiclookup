@@ -1,0 +1,58 @@
+{
+  "name": "@robertraaijmakers/pptb-polymorphiclookup",
+  "version": "0.1.0",
+  "displayName": "Polymorphic Lookup Tool",
+  "description": "Create and edit polymorphic lookups with ease.",
+  "author": "Robert Raaijmakers",
+  "contributors": [
+    {
+      "name": "Robert Raaijmakers",
+      "url": "https://github.com/robertraaijmakers"
+    }
+  ],
+  "license": "MIT",
+  "main": "dist/index.html",
+  "keywords": [
+    "powerplatform",
+    "dataverse",
+    "toolbox",
+    "polymorphic",
+    "lookup"
+  ],
+  "homepage": "https://robertraaijmakers.github.io/pptb.polymorphiclookup/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robertraaijmakers/pptb.polymorphiclookup/"
+  },
+  "configurations": {
+    "repository": "https://github.com/robertraaijmakers/pptb.polymorphiclookup/",
+    "website": "https://robertraaijmakers.github.io/pptb.polymorphiclookup/",
+    "readmeUrl": "https://raw.githubusercontent.com/robertraaijmakers/pptb.polymorphiclookup/main/README.md",
+    "iconUrl": "https://raw.githubusercontent.com/robertraaijmakers/pptb.polymorphiclookup/main/assets/icon.svg"
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "npm-shrinkwrap.json"
+  ],
+  "scripts": {
+    "build": "npm run build:bundle && npm run build:assets",
+    "build:bundle": "esbuild src/app.ts --bundle --sourcemap --outdir=dist",
+    "build:assets": "node scripts/build-assets.js",
+    "build:watch": "esbuild src/app.ts --bundle --sourcemap --outdir=dist --watch",
+    "finalize-package": "node scripts/finalize-package.js",
+    "validate:publish": "node scripts/validate-publish.js",
+    "prepare:beta": "npm run version:beta && npm run build && npm run finalize-package",
+    "prepare:stable": "npm run version:stable && npm run build && npm run finalize-package",
+    "version:beta": "npm version prerelease --preid beta",
+    "version:stable": "npm version patch",
+    "publish:beta": "npm publish --access public --tag beta",
+    "publish:stable": "npm publish --access public"
+  },
+  "devDependencies": {
+    "@pptb/types": "1.0.20",
+    "esbuild": "0.27.3",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {}
+}
