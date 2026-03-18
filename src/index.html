@@ -107,10 +107,21 @@
           </div>
         </div>
         <div class="panel-footer">
-          <div id="status-message" class="status-message">Ready.</div>
-          <button type="button" id="submit-button" class="btn primary" disabled>
-            Create lookup
-          </button>
+          <div class="status-group">
+            <div id="status-message" class="status-message">Ready.</div>
+            <div id="busy-indicator" class="busy-indicator hidden" aria-live="polite" aria-atomic="true">
+              <span class="busy-spinner" aria-hidden="true"></span>
+              <span>Working...</span>
+            </div>
+          </div>
+          <div class="footer-actions">
+            <button type="button" id="delete-button" class="btn danger hidden" disabled>
+              Delete lookup
+            </button>
+            <button type="button" id="submit-button" class="btn primary" disabled>
+              Create lookup
+            </button>
+          </div>
         </div>
       </section>
 

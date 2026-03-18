@@ -33,12 +33,68 @@ type LabelLike = {
   UserLocalizedLabel?: { Label?: string | null } | null;
 } | null;
 
+type LocalizedLabelPayload = {
+  "@odata.type": "Microsoft.Dynamics.CRM.LocalizedLabel";
+  Label: string;
+  LanguageCode: number;
+};
+
+type LabelPayload = {
+  "@odata.type": "Microsoft.Dynamics.CRM.Label";
+  LocalizedLabels: LocalizedLabelPayload[];
+  UserLocalizedLabel: LocalizedLabelPayload;
+};
+
 function resolveLabel(label: LabelLike): string {
   return (
     label?.UserLocalizedLabel?.Label ??
     label?.LocalizedLabels?.[0]?.Label ??
     ""
   );
+}
+
+function buildLocalizedLabelPayload(
+  label: string,
+  languageCode: number,
+): LocalizedLabelPayload {
+  return {
+    "@odata.type": "Microsoft.Dynamics.CRM.LocalizedLabel",
+    Label: label,
+    LanguageCode: languageCode,
+  };
+}
+
+function buildLabelPayload(label: string, languageCode: number): LabelPayload {
+  return {
+    "@odata.type": "Microsoft.Dynamics.CRM.Label",
+    LocalizedLabels: [buildLocalizedLabelPayload(label, languageCode)],
+    UserLocalizedLabel: buildLocalizedLabelPayload(label, languageCode),
+  };
+}
+
+async function getLookupAttributeLabels(
+  entityLogicalName: string,
+  lookupLogicalName: string,
+): Promise<{ displayName: string; description: string }> {
+  const response = await dataverseAPI.getEntityRelatedMetadata(
+    entityLogicalName,
+    "Attributes",
+    ["LogicalName", "DisplayName", "Description"],
+  );
+  const attribute = (response?.value ?? []).find(
+    (item: any) => item.LogicalName === lookupLogicalName,
+  );
+
+  if (!attribute) {
+    throw new Error(
+      `Could not find lookup metadata for ${entityLogicalName}.${lookupLogicalName}`,
+    );
+  }
+
+  const displayName = resolveLabel(attribute.DisplayName) || lookupLogicalName;
+  const description = resolveLabel(attribute.Description) || displayName;
+
+  return { displayName, description };
 }
 
 export async function getDefaultLanguageCode(): Promise<number> {
@@ -230,25 +286,24 @@ export async function addPolymorphicLookupRelationship(
   targetEntity: string,
   relationshipSchemaName: string,
   publisherPrefix: string = "new_",
-): Promise<{ RelationshipId: string }> {
+): Promise<{ RelationshipId?: string }> {
+  const languageCode = await getDefaultLanguageCode();
+  const lookupLabels = await getLookupAttributeLabels(
+    entityLogicalName,
+    lookupLogicalName,
+  );
   const payload: any = {
     SchemaName: relationshipSchemaName,
     "@odata.type": "Microsoft.Dynamics.CRM.OneToManyRelationshipMetadata",
-    CascadeConfiguration: {
-      Assign: "NoCascade",
-      Delete: "RemoveLink",
-      Merge: "NoCascade",
-      Reparent: "NoCascade",
-      Share: "NoCascade",
-      Unshare: "NoCascade",
-    },
     ReferencedEntity: targetEntity,
     ReferencingEntity: entityLogicalName,
     Lookup: {
-      "@odata.type": "Microsoft.Dynamics.CRM.LookupAttributeMetadata",
-      SchemaName: lookupSchemaName,
       AttributeType: "Lookup",
       AttributeTypeName: { Value: "LookupType" },
+      Description: buildLabelPayload(lookupLabels.description, languageCode),
+      DisplayName: buildLabelPayload(lookupLabels.displayName, languageCode),
+      SchemaName: lookupSchemaName,
+      "@odata.type": "Microsoft.Dynamics.CRM.LookupAttributeMetadata",
     },
   };
 
@@ -259,15 +314,10 @@ export async function addPolymorphicLookupRelationship(
     relationshipSchemaName,
   });
 
-  const response = await dataverseAPI.execute({
-    operationName: "POST",
-    operationType: "api",
-    path: "RelationshipDefinitions",
-    body: payload,
-  });
+  const response = await dataverseAPI.create("RelationshipDefinition", payload);
 
   return {
-    RelationshipId: response?.MetadataId ?? response?.RelationshipId,
+    RelationshipId: response?.id,
   };
 }
 
@@ -277,6 +327,20 @@ export async function removePolymorphicLookupRelationship(
   console.log("Removing relationship from polymorphic lookup:", relationshipId);
 
   await dataverseAPI.delete(`RelationshipDefinition`, relationshipId);
+
+  return { success: true };
+}
+
+export async function removePolymorphicLookup(
+  entityLogicalName: string,
+  attributeIdentifier: string,
+): Promise<{ success: boolean }> {
+  console.log("Removing polymorphic lookup attribute:", {
+    entityLogicalName,
+    attributeIdentifier,
+  });
+
+  await dataverseAPI.deleteAttribute(entityLogicalName, attributeIdentifier);
 
   return { success: true };
 }

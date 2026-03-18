@@ -122,6 +122,28 @@ body.theme-dark .btn:not(:disabled):hover {
   background: var(--accent-dark);
 }
 
+.btn.danger {
+  background: #fbe7e4;
+  border-color: #d97563;
+  color: #8f2f23;
+}
+
+.btn.danger:not(:disabled):hover {
+  background: #f5d6d0;
+  border-color: #c96150;
+}
+
+body.theme-dark .btn.danger {
+  background: #3a201c;
+  border-color: #9d5448;
+  color: #f2c1b8;
+}
+
+body.theme-dark .btn.danger:not(:disabled):hover {
+  background: #472722;
+  border-color: #bb685b;
+}
+
 .btn.theme-toggle {
   padding: 4px;
   width: auto;
@@ -222,6 +244,44 @@ body.theme-dark .theme-icon-moon {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+}
+
+.status-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.busy-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.busy-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .form-grid {
@@ -465,5 +525,16 @@ body.theme-dark .change-chip {
   .panel-footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .status-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .footer-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }

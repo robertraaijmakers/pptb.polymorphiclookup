@@ -12,6 +12,7 @@ import {
 	getSolutionTableIds,
 	getUnmanagedSolutions,
 	publishCustomizations,
+	removePolymorphicLookup,
 	updatePolymorphicLookupTargets,
 	updatePolymorphicLookupMetadata,
 	type PolymorphicLookupSummary,
@@ -42,6 +43,8 @@ const elements = {
 	referenceHint: document.getElementById("reference-hint") as HTMLSpanElement,
 	changeSummary: document.getElementById("change-summary") as HTMLDivElement,
 	submitButton: document.getElementById("submit-button") as HTMLButtonElement,
+	deleteButton: document.getElementById("delete-button") as HTMLButtonElement,
+	busyIndicator: document.getElementById("busy-indicator") as HTMLDivElement,
 	modePill: document.getElementById("mode-pill") as HTMLSpanElement,
 	statusMessage: document.getElementById("status-message") as HTMLDivElement,
 	logTarget: document.getElementById("log") as HTMLPreElement,
@@ -68,6 +71,10 @@ function isNewLookup() {
 	return elements.attributeSelect.value === NEW_ATTRIBUTE_VALUE;
 }
 
+function canDeleteLookup() {
+	return !!activeTable && !!activeLookup && !isNewLookup();
+	}
+
 function setBusy(isBusy: boolean) {
 	elements.solutionSelect.disabled = isBusy;
 	elements.tableSelect.disabled = isBusy || !activeSolution;
@@ -79,6 +86,9 @@ function setBusy(isBusy: boolean) {
 	elements.requiredLevelSelect.disabled = isBusy;
 	elements.referenceButton.disabled = isBusy || !activeTable;
 	elements.submitButton.disabled = isBusy || !canSubmit();
+	elements.deleteButton.disabled = isBusy || !canDeleteLookup();
+	elements.busyIndicator.classList.toggle("hidden", !isBusy);
+	elements.busyIndicator.setAttribute("aria-hidden", isBusy ? "false" : "true");
 }
 
 function normalizePrefix(prefix: string | null) {
@@ -151,6 +161,11 @@ function applyModeUI() {
 			? "Create lookup"
 			: "Update lookup";
 		elements.submitButton.title = "";
+	}
+
+	if (elements.deleteButton) {
+		elements.deleteButton.classList.toggle("hidden", isNew);
+		elements.deleteButton.disabled = !canDeleteLookup();
 	}
 	
 	elements.displayNameInput.disabled = !isNew;
@@ -561,7 +576,7 @@ async function handleSubmit() {
 				requiredLevel,
 				schemaPrefix,
 			);
-			logMessage(`Created polymorphic lookup ${schemaName} on ${activeTable.logicalName}.`);
+			logMessage(`Created polymorphic lookup ${schemaName} on ${activeTable.logicalName}, now publishing customizations, please wait...`);
 			await publishCustomizations(activeTable.logicalName);
 			await toolboxAPI?.utils?.showNotification?.({
 				title: "Lookup created",
@@ -610,7 +625,7 @@ async function handleSubmit() {
 				targets,
 				schemaPrefix,
 			);
-			logMessage(`Updated lookup: metadata changed, +${result.added} target(s) added, -${result.removed} target(s) removed.`);
+			logMessage(`Updated lookup: metadata changed, +${result.added} target(s) added, -${result.removed} target(s) removed, now publishing customizations, please wait...`);
 			await publishCustomizations(activeTable.logicalName);
 			await toolboxAPI?.utils?.showNotification?.({
 				title: "Lookup updated",
@@ -621,13 +636,52 @@ async function handleSubmit() {
 
 		await handleTableChange();
 		setStatus("Changes published.");
-	} catch (error) {
-		console.error("Operation failed", error);
-		logMessage("Operation failed. Check console for details.");
-		setStatus("Operation failed.");
+	} catch (error: any) {
+		console.error("Operation failed: ", error);
+		logMessage("Operation failed. Error: " + (error.message || error));
+		setStatus("Operation failed, please retry.");
 		await toolboxAPI?.utils?.showNotification?.({
 			title: "Operation failed",
-			body: "See console for details.",
+			body: "Error: " + (error.message || "Unknown error"),
+			type: "error",
+		});
+	} finally {
+		setBusy(false);
+	}
+}
+
+async function handleDeleteLookup() {
+	if (!activeTable || !activeLookup) {
+		return;
+	}
+
+	const confirmed = window.confirm(
+		`Delete polymorphic lookup ${activeLookup.displayName} (${activeLookup.logicalName}) from ${activeTable.logicalName}? This permanently removes the full attribute.`,
+	);
+	if (!confirmed) {
+		return;
+	}
+
+	setBusy(true);
+	try {
+		const attributeIdentifier = activeLookup.metadataId || activeLookup.logicalName;
+		await removePolymorphicLookup(activeTable.logicalName, attributeIdentifier);
+		logMessage(`Deleted polymorphic lookup ${activeLookup.logicalName} from ${activeTable.logicalName}, now publishing customizations, please wait...`);
+		await publishCustomizations(activeTable.logicalName);
+		await toolboxAPI?.utils?.showNotification?.({
+			title: "Lookup deleted",
+			body: "The polymorphic lookup was deleted and published.",
+			type: "success",
+		});
+		await handleTableChange();
+		setStatus("Lookup deleted and published.");
+	} catch (error: any) {
+		console.error("Delete failed:", error);
+		logMessage("Delete failed. Error: " + (error.message || error));
+		setStatus("Delete failed, please retry.");
+		await toolboxAPI?.utils?.showNotification?.({
+			title: "Delete failed",
+			body: "Error: " + (error.message || "Unknown error"),
 			type: "error",
 		});
 	} finally {
@@ -721,6 +775,7 @@ function bindEvents() {
 		}
 	});
 	elements.submitButton.addEventListener("click", handleSubmit);
+	elements.deleteButton.addEventListener("click", handleDeleteLookup);
 	elements.themeToggle.addEventListener("click", () => {
 		const nextTheme = document.body.classList.contains("theme-dark")
 			? "light"
