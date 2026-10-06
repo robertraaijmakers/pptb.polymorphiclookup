@@ -5,8 +5,9 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "noEmit": true,
+    "skipLibCheck": true,
     "lib": ["ES2020", "DOM"],
-    "types": ["@pptb/types"]
+    "types": ["@pptb/types", "node"]
   },
   "include": ["src/**/*.ts"]
 }
