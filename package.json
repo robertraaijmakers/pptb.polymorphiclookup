@@ -1,6 +1,6 @@
 {
   "name": "@robertraaijmakers/pptb-polymorphiclookup",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "Polymorphic Lookups",
   "description": "Create, edit and delete polymorphic lookups with ease.",
   "icon": "icon.svg",
