@@ -59,6 +59,22 @@
               <label for="attribute-select">Attribute</label>
               <select id="attribute-select" disabled></select>
               <span class="hint">Pick an existing polymorphic lookup or create a new one.</span>
+              <span class="hint" id="attribute-limit-hint">
+                Only lookups that reference at least two tables are listed. A polymorphic lookup
+                with just one referenced table is not detected; add a second table to it in the
+                Power Apps maker portal, or enable the experimental option below.
+              </span>
+              <label class="warning-toggle" for="single-target-toggle">
+                <input id="single-target-toggle" type="checkbox" disabled />
+                <span>Experimental: also list single-table lookups</span>
+              </label>
+              <div id="single-target-warning" class="warning-box hidden" role="alert">
+                <strong>Warning:</strong> Single-table polymorphic lookups cannot be told apart from
+                ordinary lookups. Custom lookups with one referenced table are now listed and are
+                marked "single table". Updating a lookup that is not polymorphic will most likely
+                fail, and a partially applied change can leave the column in an unexpected state.
+                Use at your own risk and only on a table you can restore.
+              </div>
             </div>
             <div class="field new-only">
               <label for="display-name">Lookup display name</label>

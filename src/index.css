@@ -538,3 +538,39 @@ body.theme-dark .change-chip {
     flex-wrap: wrap;
   }
 }
+.warning-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #a84400;
+  cursor: pointer;
+}
+
+.warning-toggle input:disabled + span {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.warning-box {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 2px solid #c0392b;
+  border-radius: 8px;
+  background: #fdecea;
+  color: #7b1f14;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+body.theme-dark .warning-toggle {
+  color: #f39c4a;
+}
+
+body.theme-dark .warning-box {
+  background: #3a1a16;
+  border-color: #e74c3c;
+  color: #ffd2cc;
+}

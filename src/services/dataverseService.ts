@@ -26,6 +26,7 @@ export type PolymorphicLookupSummary = {
   description?: string;
   requiredLevel?: string;
   metadataId?: string;
+  isSingleTarget?: boolean; // Only references one table; may be an ordinary lookup
 };
 
 type LabelLike = {
@@ -205,6 +206,7 @@ export function filterTablesByMetadataId(
 
 export async function getPolymorphicLookups(
   entityLogicalName: string,
+  includeSingleTarget = false,
 ): Promise<PolymorphicLookupSummary[]> {
   const response = await dataverseAPI.getEntityRelatedMetadata(
     entityLogicalName,
@@ -221,7 +223,19 @@ export async function getPolymorphicLookups(
       if (attribute.AttributeTypeName?.Value !== "LookupType") {
         return false;
       }
-      return Array.isArray(attribute.Targets) && attribute.Targets.length >= 2;
+      if (!Array.isArray(attribute.Targets)) {
+        return false;
+      }
+      if (attribute.Targets.length >= 2) {
+        return true;
+      }
+      // A single-target polymorphic lookup cannot be told apart from an
+      // ordinary lookup, so only consider custom columns when opted in.
+      return (
+        includeSingleTarget &&
+        attribute.Targets.length === 1 &&
+        attribute.IsCustomAttribute === true
+      );
     })
     .map((attribute: any) => ({
       logicalName: attribute.LogicalName,
@@ -232,6 +246,7 @@ export async function getPolymorphicLookups(
       description: resolveLabel(attribute.Description) || "",
       requiredLevel: attribute.RequiredLevel?.Value ?? "None",
       metadataId: attribute.MetadataId,
+      isSingleTarget: (attribute.Targets?.length ?? 0) < 2,
     }))
     .sort((a: PolymorphicLookupSummary, b: PolymorphicLookupSummary) =>
       a.displayName.localeCompare(b.displayName, undefined, {

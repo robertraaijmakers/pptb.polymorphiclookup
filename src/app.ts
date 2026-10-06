@@ -30,6 +30,8 @@ const elements = {
 	solutionSelect: document.getElementById("solution-select") as HTMLSelectElement,
 	tableSelect: document.getElementById("table-select") as HTMLSelectElement,
 	attributeSelect: document.getElementById("attribute-select") as HTMLSelectElement,
+	singleTargetToggle: document.getElementById("single-target-toggle") as HTMLInputElement,
+	singleTargetWarning: document.getElementById("single-target-warning") as HTMLDivElement,
 	displayNameInput: document.getElementById("display-name") as HTMLInputElement,
 	schemaPrefix: document.getElementById("schema-prefix") as HTMLSpanElement,
 	schemaSuffix: document.getElementById("schema-suffix") as HTMLInputElement,
@@ -500,13 +502,17 @@ async function handleTableChange() {
 
 	setStatus("Loading polymorphic lookups...");
 	setBusy(true);
+	elements.singleTargetToggle.disabled = false;
 	try {
-		polymorphicLookups = await getPolymorphicLookups(activeTable.logicalName);
+		polymorphicLookups = await getPolymorphicLookups(
+			activeTable.logicalName,
+			elements.singleTargetToggle.checked,
+		);
 		const options = [
 			{ value: NEW_ATTRIBUTE_VALUE, label: "Create new lookup" },
 			...polymorphicLookups.map((lookup) => ({
 				value: lookup.logicalName,
-				label: `${lookup.displayName} (${lookup.logicalName})`,
+				label: `${lookup.displayName} (${lookup.logicalName})${lookup.isSingleTarget ? " - single table, may not be polymorphic" : ""}`,
 			})),
 		];
 		setSelectOptions(elements.attributeSelect, options, "Select lookup");
@@ -713,6 +719,10 @@ function bindEvents() {
 	elements.solutionSelect?.addEventListener("change", handleSolutionChange);
 	elements.tableSelect?.addEventListener("change", handleTableChange);
 	elements.attributeSelect?.addEventListener("change", handleAttributeChange);
+	elements.singleTargetToggle?.addEventListener("change", () => {
+		elements.singleTargetWarning.classList.toggle("hidden", !elements.singleTargetToggle.checked);
+		void handleTableChange();
+	});
 	elements.displayNameInput?.addEventListener("input", () => {
 		updateSchemaFromDisplay();
 		updateSubmitState();
