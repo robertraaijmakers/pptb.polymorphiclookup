@@ -21,8 +21,11 @@
     "lookup"
   ],
   "features": {
-    "minAPI": "1.2.0",
-    "multiConnection": "none"
+    "connections": {
+      "min": 1,
+      "max": 1
+    },
+    "minAPI": "1.2.7"
   },
   "homepage": "https://robertraaijmakers.github.io/pptb.polymorphiclookup/",
   "repository": {
